@@ -27,6 +27,9 @@ See training and test tips at: https://github.com/junyanz/pytorch-CycleGAN-and-p
 See frequently asked questions at: https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix/blob/master/docs/qa.md
 """
 import os
+import torch
+from datetime import datetime
+from pathlib import Path
 from options.test_options import TestOptions
 from data import create_dataset
 from models import create_model
@@ -78,3 +81,12 @@ if __name__ == '__main__':
             print('processing (%04d)-th image... %s' % (i, img_path))
         save_images(webpage, visuals, img_path, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize, use_wandb=opt.use_wandb)
     webpage.save()  # save the HTML
+    
+    print('===Exporting model===')
+    path = Path(f'../build/denoiser_{int(datetime.now().timestamp())}/denoiser_model.onnx')
+    path.parent.mkdir(parents=True, exist_ok=True)
+    
+    input_tensor = torch.randn(1, 3, 256, 256)  # NOTE: Will have to resize in output data and then interp up
+    # NOTE: .module assumes torch.nn.DataParellel
+    torch.onnx.export(model.netG.module, input_tensor.to(model.netG.output_device), str(path))
+    print('Model:', path)
