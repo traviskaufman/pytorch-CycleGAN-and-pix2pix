@@ -102,6 +102,10 @@ def get_transform(opt, params=None, grayscale=False, method=transforms.Interpola
             transform_list.append(transforms.RandomHorizontalFlip())
         elif params['flip']:
             transform_list.append(transforms.Lambda(lambda img: __flip(img, params['flip'])))
+            
+    if opt.isTrain:
+        jit = .15  # See: notebooks/XRay2IR Colorization
+        transform_list += [transforms.ColorJitter(brightness=jit)]
 
     if convert:
         transform_list += [transforms.ToTensor()]
